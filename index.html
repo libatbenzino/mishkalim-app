@@ -31,7 +31,6 @@
 </head>
 
 <body class="bg-gray-100 font-sans">
-  <!-- Header -->
   <header class="bg-gradient-to-r from-blue-600 to-blue-400 text-white p-6 shadow">
     <div class="container mx-auto text-center">
       <h1 class="text-2xl font-bold">ניהול משטחים ומשקלי חביות</h1>
@@ -40,16 +39,14 @@
   </header>
 
   <main class="container mx-auto p-4 space-y-6">
-    <!-- הוספת משטח -->
     <section class="bg-white p-4 rounded shadow">
       <h2 class="text-lg font-bold mb-2">הוספת משטח חדש</h2>
       <div class="flex flex-col sm:flex-row items-center gap-2">
-        <button onclick="addRow()" class="bg-blue-600 text-white px-4 py-2 rounded">הוסף משטח</button>
         <input id="pallet-id-input" type="text" placeholder="OF149875 :דוגמה" class="border p-2 rounded flex-1" />
+        <button onclick="addRow()" class="bg-blue-600 text-white px-4 py-2 rounded">הוסף משטח</button>
       </div>
     </section>
 
-    <!-- רשימת משטחים -->
     <section id="print-area" class="bg-white p-4 rounded shadow overflow-x-auto">
       <div class="flex flex-wrap gap-2 mb-4">
         <button onclick="printTable()" class="bg-gray-700 text-white px-4 py-2 rounded">הדפס טבלה</button>
@@ -76,19 +73,16 @@
     </section>
   </main>
 
-  <!-- Footer -->
   <footer class="bg-gray-800 text-white text-center p-4 mt-10">
     מערכת ניהול משטחים ומשקלי חביות © 2023
   </footer>
 
-  <!-- Scripts -->
   <script>
     let rowCount = 0;
 
-    function addRow() {
+    function addRow(palletId = null, weights = []) {
       const input = document.getElementById('pallet-id-input');
-      const id = input.value.trim();
-
+      const id = palletId || input.value.trim();
       if (!id) {
         alert('נא להזין מספר משטח לפני הוספה');
         return;
@@ -98,12 +92,15 @@
       const row = document.createElement('tr');
       row.className = 'bg-white border-b';
 
+      let inputsHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const val = weights[i] || '';
+        inputsHTML += `<td><input type="number" class="p-1 border rounded w-20" value="${val}" onchange="updateWeight(this)" /></td>`;
+      }
+
       row.innerHTML = `
         <td class="p-2">${id}</td>
-        <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
-        <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
-        <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
-        <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
+        ${inputsHTML}
         <td class="total p-2 font-bold">0</td>
         <td><button onclick="removeRow(this)" class="text-red-600">🗑️</button></td>
       `;
@@ -111,13 +108,16 @@
       tbody.appendChild(row);
       rowCount++;
       input.value = '';
+      updateWeight(row.querySelector('input'));
       updateSummary();
+      saveTableToStorage();
     }
 
     function removeRow(btn) {
       btn.closest('tr').remove();
       rowCount--;
       updateSummary();
+      saveTableToStorage();
     }
 
     function updateWeight(input) {
@@ -127,6 +127,7 @@
       inputs.forEach(i => sum += parseFloat(i.value) || 0);
       row.querySelector('.total').innerText = sum.toFixed(1);
       updateSummary();
+      saveTableToStorage();
     }
 
     function updateSummary() {
@@ -140,27 +141,62 @@
       document.getElementById('table-body').innerHTML = '';
       rowCount = 0;
       updateSummary();
+      localStorage.removeItem('palletData');
     }
 
     function printTable() {
-      window.print();
+      const printContents = document.getElementById('print-area').innerHTML;
+      const printWindow = window.open('', '', 'width=800,height=600');
+      printWindow.document.write('<html><head><title>הדפס טבלה</title>');
+      printWindow.document.write('<style>table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }</style>');
+      printWindow.document.write('</head><body dir="rtl">');
+      printWindow.document.write(printContents);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
     }
 
     function exportPDF() {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      const doc = new jsPDF({ orientation: 'landscape' });
+      doc.setFont('helvetica');
+      doc.setFontSize(12);
       doc.text('רשימת משטחים', 10, 10);
+
       let y = 20;
       document.querySelectorAll('#table tbody tr').forEach(row => {
         const cells = row.querySelectorAll('td');
-        const data = Array.from(cells).map(c => c.innerText.trim()).join(' | ');
-        doc.text(data, 10, y);
+        const data = Array.from(cells).slice(0, 6).map(c => c.innerText.trim());
+        doc.text(data.join(' | '), 10, y);
         y += 10;
       });
+
       doc.save('רשימת_משטחים.pdf');
     }
+
+    function saveTableToStorage() {
+      const rows = document.querySelectorAll('#table tbody tr');
+      const data = Array.from(rows).map(row => {
+        const id = row.cells[0].innerText.trim();
+        const inputs = row.querySelectorAll('input');
+        const weights = Array.from(inputs).map(i => i.value.trim());
+        return { id, weights };
+      });
+      localStorage.setItem('palletData', JSON.stringify(data));
+    }
+
+    function loadTableFromStorage() {
+      const data = JSON.parse(localStorage.getItem('palletData') || '[]');
+      data.forEach(item => addRow(item.id, item.weights));
+    }
+
+    // טען מהאחסון המקומי כשנכנס הדף
+    window.onload = loadTableFromStorage;
   </script>
 </body>
 
 </html>
+
 
