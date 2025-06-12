@@ -7,6 +7,27 @@
   <title>ניהול משטחים</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      #print-area,
+      #print-area * {
+        visibility: visible;
+      }
+
+      #print-area {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        padding: 20px;
+        background: white;
+      }
+    }
+  </style>
 </head>
 
 <body class="bg-gray-100 font-sans">
@@ -24,12 +45,12 @@
       <h2 class="text-lg font-bold mb-2">הוספת משטח חדש</h2>
       <div class="flex flex-col sm:flex-row items-center gap-2">
         <button onclick="addRow()" class="bg-blue-600 text-white px-4 py-2 rounded">הוסף משטח</button>
-        <input type="text" placeholder="OF149875 :דוגמה" class="border p-2 rounded flex-1" />
+        <input id="pallet-id-input" type="text" placeholder="OF149875 :דוגמה" class="border p-2 rounded flex-1" />
       </div>
     </section>
 
     <!-- רשימת משטחים -->
-    <section class="bg-white p-4 rounded shadow overflow-x-auto">
+    <section id="print-area" class="bg-white p-4 rounded shadow overflow-x-auto">
       <div class="flex flex-wrap gap-2 mb-4">
         <button onclick="printTable()" class="bg-gray-700 text-white px-4 py-2 rounded">הדפס טבלה</button>
         <button onclick="exportPDF()" class="bg-green-600 text-white px-4 py-2 rounded">ייצא ל-PDF</button>
@@ -48,8 +69,7 @@
             <th class="p-2">פעולות</th>
           </tr>
         </thead>
-        <tbody id="table-body">
-        </tbody>
+        <tbody id="table-body"></tbody>
       </table>
 
       <p class="mt-4 font-bold" id="summary">סיכום: 0 משטחים, 0 ק"ג סה"כ</p>
@@ -66,11 +86,18 @@
     let rowCount = 0;
 
     function addRow() {
+      const input = document.getElementById('pallet-id-input');
+      const id = input.value.trim();
+
+      if (!id) {
+        alert('נא להזין מספר משטח לפני הוספה');
+        return;
+      }
+
       const tbody = document.getElementById('table-body');
       const row = document.createElement('tr');
       row.className = 'bg-white border-b';
 
-      const id = 'OF' + Math.floor(100000 + Math.random() * 900000);
       row.innerHTML = `
         <td class="p-2">${id}</td>
         <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
@@ -80,8 +107,10 @@
         <td class="total p-2 font-bold">0</td>
         <td><button onclick="removeRow(this)" class="text-red-600">🗑️</button></td>
       `;
+
       tbody.appendChild(row);
       rowCount++;
+      input.value = '';
       updateSummary();
     }
 
@@ -134,3 +163,4 @@
 </body>
 
 </html>
+
