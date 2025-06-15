@@ -152,33 +152,55 @@
       win.print();
       win.close();
     }
+<script>
+  // טוען את הפונט Alef
+  const alefFontUrl = 'https://fonts.gstatic.com/s/alef/v16/FeVSS0NQpLYgn7tZLzHQ.woff2';
 
-    function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'landscape' });
-      const rows = document.querySelectorAll('#table tbody tr');
+  const loadHebrewFont = async () => {
+    const font = await fetch(alefFontUrl).then(res => res.arrayBuffer());
+    const { jsPDF } = window.jspdf;
 
-      const tableData = [];
-      rows.forEach(row => {
-        const palletId = row.cells[0].innerText.trim();
-        const weights = Array.from(row.querySelectorAll('input')).map(i => i.value.trim());
-        const total = row.cells[5].innerText.trim();
-        tableData.push([palletId, ...weights, total]);
-      });
+    jsPDF.API.events.push(['addFonts', () => {
+      jsPDF.API.addFileToVFS('Alef-Regular.ttf', btoa(String.fromCharCode(...new Uint8Array(font))));
+      jsPDF.API.addFont('Alef-Regular.ttf', 'Alef', 'normal');
+    }]);
+  };
 
-      doc.setFont('helvetica');
-      doc.setFontSize(14);
-      doc.text('רשימת משטחים', 140, 15, { align: 'center' });
-      doc.autoTable({
-        head: [['מספר משטח', 'חבית 1 (ק״ג)', 'חבית 2 (ק״ג)', 'חבית 3 (ק״ג)', 'חבית 4 (ק״ג)', 'סה״כ משקל']],
-        body: tableData,
-        styles: { font: 'helvetica', fontStyle: 'normal', halign: 'center' },
-        margin: { top: 20 },
-        theme: 'grid'
-      });
+  loadHebrewFont();
+</script>
 
-      doc.save('רשימת_משטחים.pdf');
-    }
+   function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape' });
+
+  doc.setFont('Alef'); // שימוש בפונט שתומך בעברית
+  doc.setFontSize(14);
+  doc.text('רשימת משטחים', 140, 15, { align: 'center' });
+
+  const rows = document.querySelectorAll('#table tbody tr');
+  const tableData = [];
+  rows.forEach(row => {
+    const palletId = row.cells[0].innerText.trim();
+    const weights = Array.from(row.querySelectorAll('input')).map(i => i.value.trim());
+    const total = row.cells[5].innerText.trim();
+    tableData.push([palletId, ...weights, total]);
+  });
+
+  doc.autoTable({
+    head: [['מספר משטח', 'חבית 1 (ק״ג)', 'חבית 2 (ק״ג)', 'חבית 3 (ק״ג)', 'חבית 4 (ק״ג)', 'סה״כ משקל']],
+    body: tableData,
+    styles: {
+      font: 'Alef',
+      fontStyle: 'normal',
+      halign: 'center'
+    },
+    margin: { top: 20 },
+    theme: 'grid'
+  });
+
+  doc.save('רשימת_משטחים.pdf');
+}
+
   </script>
 </body>
 </html>
