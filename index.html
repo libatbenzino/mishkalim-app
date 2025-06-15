@@ -3,29 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <title>ניהול משטחים</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="bg-gray-100 p-6">
+  <div class="max-w-4xl mx-auto space-y-6">
 
-  <div class="max-w-5xl mx-auto space-y-6">
-    <h1 class="text-2xl font-bold text-center text-blue-700">ניהול משטחים ומשקלי חביות</h1>
+    <h1 class="text-2xl font-bold text-center text-blue-800">ניהול משטחים</h1>
 
-    <!-- הוספת משטח -->
+    <!-- טופס הוספה -->
     <div class="bg-white p-4 rounded shadow">
       <label class="block mb-2 font-semibold">מספר משטח:</label>
       <div class="flex gap-2">
         <input id="pallet-id-input" type="text" placeholder="לדוגמה: OF12345" class="flex-1 border rounded px-2 py-1">
         <button onclick="addRow()" class="bg-blue-600 text-white px-4 py-1 rounded">הוסף משטח</button>
       </div>
+    </div>
 
-    <!-- כפתורים -->
+    <!-- כפתורי פעולה -->
     <div class="flex flex-wrap gap-2">
       <button onclick="printTable()" class="bg-gray-700 text-white px-4 py-2 rounded">הדפס טבלה</button>
       <button onclick="exportPDF()" class="bg-green-700 text-white px-4 py-2 rounded">ייצוא ל-PDF</button>
@@ -50,19 +46,16 @@
       </table>
       <p class="mt-4 font-bold" id="summary">סיכום: 0 משטחים, 0 ק"ג</p>
     </div>
+
   </div>
 
-  <!-- סקריפטים -->
   <script>
     let rowCount = 0;
 
     function addRow() {
       const input = document.getElementById("pallet-id-input");
       const id = input.value.trim();
-      if (!id) {
-        alert("יש להזין מספר משטח");
-        return;
-      }
+      if (!id) return alert("אנא הזן מספר משטח.");
 
       const tbody = document.getElementById("table-body");
       const row = document.createElement("tr");
@@ -110,45 +103,13 @@
     }
 
     function printTable() {
-      const win = window.open("", "", "width=900,height=600");
-      const rows = document.querySelectorAll("#table tbody tr");
-      let html = `
-        <html><head><title>הדפסה</title></head><body dir="rtl">
-        <h2 style="text-align:center;">רשימת משטחים</h2>
-        <table border="1" style="width:100%; text-align:center; border-collapse:collapse;">
-          <thead>
-            <tr>
-              <th>מספר משטח</th>
-              <th>חבית 1</th>
-              <th>חבית 2</th>
-              <th>חבית 3</th>
-              <th>חבית 4</th>
-              <th>סה"כ</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      rows.forEach(row => {
-        const id = row.cells[0].innerText;
-        const weights = Array.from(row.querySelectorAll("input")).map(i => i.value || "");
-        const total = row.querySelector(".total").innerText;
-        html += `<tr><td>${id}</td>${weights.map(w => `<td>${w}</td>`).join("")}<td>${total}</td></tr>`;
-      });
-
-      html += "</tbody></table></body></html>";
-      win.document.write(html);
-      win.document.close();
-      win.focus();
-      win.print();
-      win.close();
+      window.print();
     }
 
-    async function exportPDF() {
+    function exportPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: "landscape" });
 
-      doc.setFont("helvetica");
       doc.setFontSize(14);
       doc.text("רשימת משטחים", 140, 15, { align: "center" });
 
@@ -165,7 +126,7 @@
       doc.autoTable({
         head: [['מספר משטח', 'חבית 1', 'חבית 2', 'חבית 3', 'חבית 4', 'סה"כ']],
         body: data,
-        styles: { halign: 'center' },
+        styles: { halign: 'center', font: 'helvetica' },
         theme: 'grid',
         margin: { top: 25 }
       });
@@ -175,3 +136,4 @@
   </script>
 </body>
 </html>
+
