@@ -7,6 +7,7 @@
   <title>ניהול משטחים</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body class="bg-gray-100 font-sans">
@@ -169,19 +170,35 @@
     function exportPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'landscape' });
+
       doc.setFont('helvetica');
-      doc.setFontSize(12);
+      doc.setFontSize(14);
       doc.text('רשימת משטחים', 10, 10);
 
-      let y = 20;
-      const rows = document.querySelectorAll('#table tbody tr');
-      rows.forEach(row => {
+      const rows = [];
+      const tableRows = document.querySelectorAll('#table tbody tr');
+
+      tableRows.forEach(row => {
         const palletId = row.cells[0].innerText.trim();
         const weights = Array.from(row.querySelectorAll('input')).map(i => i.value.trim());
         const total = row.cells[5].innerText.trim();
-        const line = [palletId, ...weights, total].join(' | ');
-        doc.text(line, 10, y);
-        y += 10;
+        rows.push([palletId, ...weights, total]);
+      });
+
+      doc.autoTable({
+        head: [['מספר משטח', 'חבית 1 (ק"ג)', 'חבית 2 (ק"ג)', 'חבית 3 (ק"ג)', 'חבית 4 (ק"ג)', 'סה"כ']],
+        body: rows,
+        startY: 20,
+        theme: 'grid',
+        styles: {
+          halign: 'center',
+          font: 'helvetica',
+        },
+        headStyles: {
+          fillColor: [100, 149, 237],
+          textColor: 255,
+        },
+        margin: { left: 10, right: 10 },
       });
 
       doc.save('רשימת_משטחים.pdf');
@@ -190,5 +207,4 @@
 </body>
 
 </html>
-
 
