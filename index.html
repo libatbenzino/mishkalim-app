@@ -6,6 +6,7 @@
   <title>ניהול משטחים</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="bg-gray-100 font-sans">
 
@@ -166,22 +167,37 @@
     function exportPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'landscape' });
-      doc.setFont('helvetica');
-      doc.setFontSize(12);
-      doc.text('רשימת משטחים', 10, 10);
 
-      let y = 20;
+      const headers = [
+        ["מספר משטח", "חבית 1 (ק\"ג)", "חבית 2 (ק\"ג)", "חבית 3 (ק\"ג)", "חבית 4 (ק\"ג)", "סה\"כ משקל"]
+      ];
+
+      const data = [];
+
       const rows = document.querySelectorAll('#table tbody tr');
       rows.forEach(row => {
         const palletId = row.cells[0].innerText.trim();
         const weights = Array.from(row.querySelectorAll('input')).map(i => i.value || '');
         const total = row.cells[5].innerText.trim();
-        const line = [palletId, ...weights, total].join(' | ');
-        doc.text(line, 10, y);
-        y += 10;
+        data.push([palletId, ...weights, total]);
       });
 
-      doc.save('רשימת_משטחים.pdf');
+      doc.setFont('helvetica');
+      doc.setFontSize(14);
+      doc.text("רשימת משטחים", 270, 15, { align: 'right' });
+
+      doc.autoTable({
+        head: headers,
+        body: data,
+        styles: { font: "helvetica", halign: "right" },
+        startY: 25,
+        margin: { right: 10, left: 10 },
+        theme: 'grid',
+        headStyles: { fillColor: [100, 149, 237], textColor: 255, halign: "center" },
+        bodyStyles: { halign: "center" },
+      });
+
+      doc.save("רשימת_משטחים.pdf");
     }
   </script>
 </body>
