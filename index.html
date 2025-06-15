@@ -1,192 +1,178 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>ניהול משטחים</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
+<body class="bg-gray-100 p-6">
 
-<body class="bg-gray-100 font-sans">
-  <!-- Header -->
-  <header class="bg-gradient-to-r from-blue-600 to-blue-400 text-white p-6 shadow">
-    <div class="container mx-auto text-center">
-      <h1 class="text-2xl font-bold">ניהול משטחים ומשקלי חביות</h1>
-      <p class="text-sm">הזנת משקלי חביות לפי מספר משטח</p>
-    </div>
-  </header>
+  <div class="max-w-5xl mx-auto space-y-6">
+    <h1 class="text-2xl font-bold text-center text-blue-700">ניהול משטחים ומשקלי חביות</h1>
 
-  <main class="container mx-auto p-4 space-y-6">
     <!-- הוספת משטח -->
-    <section class="bg-white p-4 rounded shadow">
-      <h2 class="text-lg font-bold mb-2">הוספת משטח חדש</h2>
-      <div class="flex flex-col sm:flex-row items-center gap-2">
-        <button onclick="addRow()" class="bg-blue-600 text-white px-4 py-2 rounded">הוסף משטח</button>
-        <input id="pallet-id-input" type="text" placeholder="OF149875 :דוגמה" class="border p-2 rounded flex-1" />
+    <div class="bg-white p-4 rounded shadow">
+      <label class="block mb-2 font-semibold">מספר משטח:</label>
+      <div class="flex gap-2">
+        <input id="pallet-id-input" type="text" placeholder="לדוגמה: OF12345" class="flex-1 border rounded px-2 py-1">
+        <button onclick="addRow()" class="bg-blue-600 text-white px-4 py-1 rounded">הוסף משטח</button>
       </div>
-    </section>
+    </div>
 
-    <!-- רשימת משטחים -->
-    <section class="bg-white p-4 rounded shadow overflow-x-auto">
-      <div class="flex flex-wrap gap-2 mb-4">
-        <button onclick="printTable()" class="bg-gray-700 text-white px-4 py-2 rounded">הדפס טבלה</button>
-        <button onclick="exportPDF()" class="bg-green-600 text-white px-4 py-2 rounded">ייצא ל-PDF</button>
-        <button onclick="clearTable()" class="bg-red-600 text-white px-4 py-2 rounded">נקה הכל</button>
-      </div>
+    <!-- כפתורים -->
+    <div class="flex flex-wrap gap-2">
+      <button onclick="printTable()" class="bg-gray-700 text-white px-4 py-2 rounded">הדפס טבלה</button>
+      <button onclick="exportPDF()" class="bg-green-700 text-white px-4 py-2 rounded">ייצוא ל-PDF</button>
+      <button onclick="clearTable()" class="bg-red-600 text-white px-4 py-2 rounded">נקה הכל</button>
+    </div>
 
-      <table id="table" class="min-w-full table-auto border text-center">
+    <!-- טבלה -->
+    <div class="overflow-x-auto bg-white rounded shadow p-4">
+      <table id="table" class="w-full table-auto text-center border">
         <thead class="bg-gray-200">
           <tr>
-            <th class="p-2">מספר משטח</th>
-            <th class="p-2">חבית 1 (ק"ג)</th>
-            <th class="p-2">חבית 2 (ק"ג)</th>
-            <th class="p-2">חבית 3 (ק"ג)</th>
-            <th class="p-2">חבית 4 (ק"ג)</th>
-            <th class="p-2">סה"כ משקל (ק"ג)</th>
-            <th class="p-2">פעולות</th>
+            <th class="p-2 border">מספר משטח</th>
+            <th class="p-2 border">חבית 1 (ק"ג)</th>
+            <th class="p-2 border">חבית 2 (ק"ג)</th>
+            <th class="p-2 border">חבית 3 (ק"ג)</th>
+            <th class="p-2 border">חבית 4 (ק"ג)</th>
+            <th class="p-2 border">סה"כ (ק"ג)</th>
+            <th class="p-2 border">פעולה</th>
           </tr>
         </thead>
         <tbody id="table-body"></tbody>
       </table>
+      <p class="mt-4 font-bold" id="summary">סיכום: 0 משטחים, 0 ק"ג</p>
+    </div>
+  </div>
 
-      <p class="mt-4 font-bold" id="summary">סיכום: 0 משטחים, 0 ק"ג סה"כ</p>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer class="bg-gray-800 text-white text-center p-4 mt-10">
-    מערכת ניהול משטחים ומשקלי חביות © 2023
-  </footer>
-
-  <!-- Scripts -->
+  <!-- סקריפטים -->
   <script>
     let rowCount = 0;
 
     function addRow() {
-      const input = document.getElementById('pallet-id-input');
+      const input = document.getElementById("pallet-id-input");
       const id = input.value.trim();
-
       if (!id) {
-        alert('נא להזין מספר משטח לפני הוספה');
+        alert("יש להזין מספר משטח");
         return;
       }
 
-      const tbody = document.getElementById('table-body');
-      const row = document.createElement('tr');
-      row.className = 'bg-white border-b';
-
-      row.innerHTML = 
-        <td class="p-2">${id}</td>
-        <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
-        <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
-        <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
-        <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
-        <td class="total p-2 font-bold">0</td>
+      const tbody = document.getElementById("table-body");
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td class="border p-2">${id}</td>
+        <td><input type="number" class="w-20 border rounded text-center" onchange="updateRow(this)"></td>
+        <td><input type="number" class="w-20 border rounded text-center" onchange="updateRow(this)"></td>
+        <td><input type="number" class="w-20 border rounded text-center" onchange="updateRow(this)"></td>
+        <td><input type="number" class="w-20 border rounded text-center" onchange="updateRow(this)"></td>
+        <td class="border p-2 font-bold total">0</td>
         <td><button onclick="removeRow(this)" class="text-red-600">🗑️</button></td>
-      ;
-
+      `;
       tbody.appendChild(row);
       rowCount++;
-      input.value = '';
+      input.value = "";
+      updateSummary();
+    }
+
+    function updateRow(input) {
+      const row = input.closest("tr");
+      const inputs = row.querySelectorAll("input");
+      let sum = 0;
+      inputs.forEach(i => sum += parseFloat(i.value) || 0);
+      row.querySelector(".total").innerText = sum.toFixed(1);
       updateSummary();
     }
 
     function removeRow(btn) {
-      btn.closest('tr').remove();
+      btn.closest("tr").remove();
       rowCount--;
       updateSummary();
     }
 
-    function updateWeight(input) {
-      const row = input.closest('tr');
-      const inputs = row.querySelectorAll('input');
-      let sum = 0;
-      inputs.forEach(i => sum += parseFloat(i.value) || 0);
-      row.querySelector('.total').innerText = sum.toFixed(1);
-      updateSummary();
-    }
-
     function updateSummary() {
-      const totals = document.querySelectorAll('.total');
-      let sum = 0;
-      totals.forEach(t => sum += parseFloat(t.innerText) || 0);
-      document.getElementById('summary').innerText = סיכום: ${rowCount} משטחים, ${sum.toFixed(1)} ק"ג סה"כ;
+      const totals = document.querySelectorAll(".total");
+      let totalSum = 0;
+      totals.forEach(cell => totalSum += parseFloat(cell.innerText) || 0);
+      document.getElementById("summary").innerText = `סיכום: ${rowCount} משטחים, ${totalSum.toFixed(1)} ק"ג`;
     }
 
     function clearTable() {
-      document.getElementById('table-body').innerHTML = '';
+      document.getElementById("table-body").innerHTML = "";
       rowCount = 0;
       updateSummary();
     }
 
     function printTable() {
-      const rows = document.querySelectorAll('#table tbody tr');
-      let printHTML = 
-        <table border="1" style="width: 100%; border-collapse: collapse; text-align: center; direction: rtl;">
+      const win = window.open("", "", "width=900,height=600");
+      const rows = document.querySelectorAll("#table tbody tr");
+      let html = `
+        <html><head><title>הדפסה</title></head><body dir="rtl">
+        <h2 style="text-align:center;">רשימת משטחים</h2>
+        <table border="1" style="width:100%; text-align:center; border-collapse:collapse;">
           <thead>
             <tr>
               <th>מספר משטח</th>
-              <th>חבית 1 (ק"ג)</th>
-              <th>חבית 2 (ק"ג)</th>
-              <th>חבית 3 (ק"ג)</th>
-              <th>חבית 4 (ק"ג)</th>
-              <th>סה"כ משקל</th>
+              <th>חבית 1</th>
+              <th>חבית 2</th>
+              <th>חבית 3</th>
+              <th>חבית 4</th>
+              <th>סה"כ</th>
             </tr>
           </thead>
           <tbody>
-      ;
+      `;
 
       rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        const palletId = cells[0].innerText.trim();
-        const weights = Array.from(row.querySelectorAll('input')).map(i => i.value.trim());
-        const total = cells[5].innerText.trim();
-
-        printHTML += 
-          <tr>
-            <td>${palletId}</td>
-            ${weights.map(w => <td>${w || ''}</td>).join('')}
-            <td>${total}</td>
-          </tr>
-        ;
+        const id = row.cells[0].innerText;
+        const weights = Array.from(row.querySelectorAll("input")).map(i => i.value || "");
+        const total = row.querySelector(".total").innerText;
+        html += `<tr><td>${id}</td>${weights.map(w => `<td>${w}</td>`).join("")}<td>${total}</td></tr>`;
       });
 
-      printHTML += '</tbody></table>';
-
-      const win = window.open('', '', 'width=800,height=600');
-      win.document.write('<html><head><title>הדפסת טבלה</title></head><body>');
-      win.document.write('<h2>רשימת משטחים</h2>');
-      win.document.write(printHTML);
-      win.document.write('</body></html>');
+      html += "</tbody></table></body></html>";
+      win.document.write(html);
       win.document.close();
       win.focus();
       win.print();
       win.close();
     }
 
-    function exportPDF() {
+    async function exportPDF() {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'landscape' });
-      doc.setFont('helvetica');
-      doc.setFontSize(12);
-      doc.text('רשימת משטחים', 10, 10);
+      const doc = new jsPDF({ orientation: "landscape" });
 
-      let y = 20;
-      const rows = document.querySelectorAll('#table tbody tr');
+      doc.setFont("helvetica");
+      doc.setFontSize(14);
+      doc.text("רשימת משטחים", 140, 15, { align: "center" });
+
+      const data = [];
+      const rows = document.querySelectorAll("#table tbody tr");
+
       rows.forEach(row => {
-        const palletId = row.cells[0].innerText.trim();
-        const weights = Array.from(row.querySelectorAll('input')).map(i => i.value.trim());
-        const total = row.cells[5].innerText.trim();
-        const line = [palletId, ...weights, total].join(' | ');
-        doc.text(line, 10, y);
-        y += 10;
+        const id = row.cells[0].innerText;
+        const weights = Array.from(row.querySelectorAll("input")).map(i => i.value || "");
+        const total = row.querySelector(".total").innerText;
+        data.push([id, ...weights, total]);
       });
 
-      doc.save('רשימת_משטחים.pdf');
+      doc.autoTable({
+        head: [['מספר משטח', 'חבית 1', 'חבית 2', 'חבית 3', 'חבית 4', 'סה"כ']],
+        body: data,
+        styles: { halign: 'center' },
+        theme: 'grid',
+        margin: { top: 25 }
+      });
+
+      doc.save("רשימת_משטחים.pdf");
     }
   </script>
 </body>
-
 </html>
