@@ -1,40 +1,34 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
+
 <head>
   <meta charset="UTF-8" />
-  <title>ניהול משטחים</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Tailwind CSS -->
+  <title>ניהול משטחים</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- AutoTable plugin -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body class="bg-gray-100 font-sans">
   <!-- Header -->
   <header class="bg-gradient-to-r from-blue-600 to-blue-400 text-white p-6 shadow">
-    <div class="text-center">
+    <div class="container mx-auto text-center">
       <h1 class="text-2xl font-bold">ניהול משטחים ומשקלי חביות</h1>
       <p class="text-sm">הזנת משקלי חביות לפי מספר משטח</p>
     </div>
   </header>
 
-  <!-- Main -->
   <main class="container mx-auto p-4 space-y-6">
-    <!-- Add pallet -->
+    <!-- הוספת משטח -->
     <section class="bg-white p-4 rounded shadow">
       <h2 class="text-lg font-bold mb-2">הוספת משטח חדש</h2>
       <div class="flex flex-col sm:flex-row items-center gap-2">
-        <input id="pallet-id-input" type="text" placeholder="לדוגמה: OF149875" class="border p-2 rounded flex-1" />
         <button onclick="addRow()" class="bg-blue-600 text-white px-4 py-2 rounded">הוסף משטח</button>
+        <input id="pallet-id-input" type="text" placeholder="OF149875 :דוגמה" class="border p-2 rounded flex-1" />
       </div>
     </section>
 
-    <!-- Table section -->
+    <!-- רשימת משטחים -->
     <section class="bg-white p-4 rounded shadow overflow-x-auto">
       <div class="flex flex-wrap gap-2 mb-4">
         <button onclick="printTable()" class="bg-gray-700 text-white px-4 py-2 rounded">הדפס טבלה</button>
@@ -63,7 +57,7 @@
 
   <!-- Footer -->
   <footer class="bg-gray-800 text-white text-center p-4 mt-10">
-    מערכת ניהול משטחים ומשקלי חביות © 2025
+    מערכת ניהול משטחים ומשקלי חביות © 2023
   </footer>
 
   <!-- Scripts -->
@@ -75,7 +69,7 @@
       const id = input.value.trim();
 
       if (!id) {
-        alert('נא להזין מספר משטח');
+        alert('נא להזין מספר משטח לפני הוספה');
         return;
       }
 
@@ -83,7 +77,7 @@
       const row = document.createElement('tr');
       row.className = 'bg-white border-b';
 
-      row.innerHTML = `
+      row.innerHTML = 
         <td class="p-2">${id}</td>
         <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
         <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
@@ -91,7 +85,7 @@
         <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
         <td class="total p-2 font-bold">0</td>
         <td><button onclick="removeRow(this)" class="text-red-600">🗑️</button></td>
-      `;
+      ;
 
       tbody.appendChild(row);
       rowCount++;
@@ -118,7 +112,7 @@
       const totals = document.querySelectorAll('.total');
       let sum = 0;
       totals.forEach(t => sum += parseFloat(t.innerText) || 0);
-      document.getElementById('summary').innerText = `סיכום: ${rowCount} משטחים, ${sum.toFixed(1)} ק"ג סה"כ`;
+      document.getElementById('summary').innerText = סיכום: ${rowCount} משטחים, ${sum.toFixed(1)} ק"ג סה"כ;
     }
 
     function clearTable() {
@@ -129,7 +123,7 @@
 
     function printTable() {
       const rows = document.querySelectorAll('#table tbody tr');
-      let printHTML = `
+      let printHTML = 
         <table border="1" style="width: 100%; border-collapse: collapse; text-align: center; direction: rtl;">
           <thead>
             <tr>
@@ -142,7 +136,7 @@
             </tr>
           </thead>
           <tbody>
-      `;
+      ;
 
       rows.forEach(row => {
         const cells = row.querySelectorAll('td');
@@ -150,20 +144,20 @@
         const weights = Array.from(row.querySelectorAll('input')).map(i => i.value.trim());
         const total = cells[5].innerText.trim();
 
-        printHTML += `
+        printHTML += 
           <tr>
             <td>${palletId}</td>
-            ${weights.map(w => `<td>${w || ''}</td>`).join('')}
+            ${weights.map(w => <td>${w || ''}</td>).join('')}
             <td>${total}</td>
           </tr>
-        `;
+        ;
       });
 
       printHTML += '</tbody></table>';
 
       const win = window.open('', '', 'width=800,height=600');
       win.document.write('<html><head><title>הדפסת טבלה</title></head><body>');
-      win.document.write('<h2 style="text-align: center;">רשימת משטחים</h2>');
+      win.document.write('<h2>רשימת משטחים</h2>');
       win.document.write(printHTML);
       win.document.write('</body></html>');
       win.document.close();
@@ -172,36 +166,27 @@
       win.close();
     }
 
-    async function exportPDF() {
+    function exportPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'landscape' });
-
       doc.setFont('helvetica');
-      doc.setFontSize(14);
-      doc.text('רשימת משטחים', 140, 15, { align: 'center' });
+      doc.setFontSize(12);
+      doc.text('רשימת משטחים', 10, 10);
 
+      let y = 20;
       const rows = document.querySelectorAll('#table tbody tr');
-      const data = [];
-
       rows.forEach(row => {
         const palletId = row.cells[0].innerText.trim();
         const weights = Array.from(row.querySelectorAll('input')).map(i => i.value.trim());
         const total = row.cells[5].innerText.trim();
-        data.push([palletId, ...weights, total]);
-      });
-
-      doc.autoTable({
-        head: [['מספר משטח', 'חבית 1 (ק"ג)', 'חבית 2 (ק"ג)', 'חבית 3 (ק"ג)', 'חבית 4 (ק"ג)', 'סה"כ משקל']],
-        body: data,
-        styles: {
-          halign: 'center'
-        },
-        theme: 'grid',
-        margin: { top: 20 }
+        const line = [palletId, ...weights, total].join(' | ');
+        doc.text(line, 10, y);
+        y += 10;
       });
 
       doc.save('רשימת_משטחים.pdf');
     }
   </script>
 </body>
+
 </html>
