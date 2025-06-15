@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>ניהול משטחים</title>
+  <title>רשימת משטחים</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -10,9 +10,9 @@
 <body class="bg-gray-100 p-6">
   <div class="max-w-4xl mx-auto space-y-6">
 
-    <h1 class="text-2xl font-bold text-center text-blue-800">ניהול משטחים</h1>
+    <h1 class="text-2xl font-bold text-center text-blue-800">רשימת משטחים</h1>
 
-    <!-- טופס הוספה -->
+    <!-- טופס הוספת משטח -->
     <div class="bg-white p-4 rounded shadow">
       <label class="block mb-2 font-semibold">מספר משטח:</label>
       <div class="flex gap-2">
@@ -21,7 +21,7 @@
       </div>
     </div>
 
-    <!-- כפתורי פעולה -->
+    <!-- כפתורים -->
     <div class="flex flex-wrap gap-2">
       <button onclick="printTable()" class="bg-gray-700 text-white px-4 py-2 rounded">הדפס טבלה</button>
       <button onclick="exportPDF()" class="bg-green-700 text-white px-4 py-2 rounded">ייצוא ל-PDF</button>
@@ -103,13 +103,47 @@
     }
 
     function printTable() {
-      window.print();
+      const table = document.getElementById("table");
+      const clonedTable = table.cloneNode(true);
+
+      // החלפת input בערכים
+      const inputs = clonedTable.querySelectorAll("input");
+      inputs.forEach(input => {
+        const td = input.parentElement;
+        const text = document.createTextNode(input.value || '');
+        td.innerHTML = '';
+        td.appendChild(text);
+      });
+
+      const printWindow = window.open('', '', 'width=900,height=600');
+      printWindow.document.write(`
+        <html dir="rtl" lang="he">
+          <head>
+            <title>הדפסת טבלה</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; direction: rtl; text-align: center; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th, td { border: 1px solid #444; padding: 8px; }
+              th { background-color: #f0f0f0; }
+            </style>
+          </head>
+          <body>
+            <h2>רשימת משטחים</h2>
+            ${clonedTable.outerHTML}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
     }
 
     function exportPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: "landscape" });
 
+      doc.setFont("helvetica");
       doc.setFontSize(14);
       doc.text("רשימת משטחים", 140, 15, { align: "center" });
 
@@ -126,7 +160,7 @@
       doc.autoTable({
         head: [['מספר משטח', 'חבית 1', 'חבית 2', 'חבית 3', 'חבית 4', 'סה"כ']],
         body: data,
-        styles: { halign: 'center', font: 'helvetica' },
+        styles: { halign: 'center' },
         theme: 'grid',
         margin: { top: 25 }
       });
@@ -136,4 +170,3 @@
   </script>
 </body>
 </html>
-
