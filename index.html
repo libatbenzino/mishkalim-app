@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,8 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-
 <body class="bg-gray-100 font-sans">
+
   <!-- Header -->
   <header class="bg-gradient-to-r from-blue-600 to-blue-400 text-white p-6 shadow">
     <div class="container mx-auto text-center">
@@ -57,7 +56,7 @@
 
   <!-- Footer -->
   <footer class="bg-gray-800 text-white text-center p-4 mt-10">
-    מערכת ניהול משטחים ומשקלי חביות © 2023
+    מערכת ניהול משטחים ומשקלי חביות © 2025
   </footer>
 
   <!-- Scripts -->
@@ -77,7 +76,7 @@
       const row = document.createElement('tr');
       row.className = 'bg-white border-b';
 
-      row.innerHTML = 
+      row.innerHTML = `
         <td class="p-2">${id}</td>
         <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
         <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
@@ -85,7 +84,7 @@
         <td><input type="number" class="p-1 border rounded w-20" onchange="updateWeight(this)" /></td>
         <td class="total p-2 font-bold">0</td>
         <td><button onclick="removeRow(this)" class="text-red-600">🗑️</button></td>
-      ;
+      `;
 
       tbody.appendChild(row);
       rowCount++;
@@ -112,7 +111,7 @@
       const totals = document.querySelectorAll('.total');
       let sum = 0;
       totals.forEach(t => sum += parseFloat(t.innerText) || 0);
-      document.getElementById('summary').innerText = סיכום: ${rowCount} משטחים, ${sum.toFixed(1)} ק"ג סה"כ;
+      document.getElementById('summary').innerText = `סיכום: ${rowCount} משטחים, ${sum.toFixed(1)} ק"ג סה"כ`;
     }
 
     function clearTable() {
@@ -123,8 +122,10 @@
 
     function printTable() {
       const rows = document.querySelectorAll('#table tbody tr');
-      let printHTML = 
-        <table border="1" style="width: 100%; border-collapse: collapse; text-align: center; direction: rtl;">
+      let printHTML = `
+        <html><head><title>הדפסה</title></head><body style="direction: rtl; font-family: Arial;">
+        <h2>רשימת משטחים</h2>
+        <table border="1" style="width: 100%; border-collapse: collapse; text-align: center;">
           <thead>
             <tr>
               <th>מספר משטח</th>
@@ -136,30 +137,26 @@
             </tr>
           </thead>
           <tbody>
-      ;
+      `;
 
       rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        const palletId = cells[0].innerText.trim();
-        const weights = Array.from(row.querySelectorAll('input')).map(i => i.value.trim());
-        const total = cells[5].innerText.trim();
+        const palletId = row.cells[0].innerText.trim();
+        const weights = Array.from(row.querySelectorAll('input')).map(i => i.value || '');
+        const total = row.cells[5].innerText.trim();
 
-        printHTML += 
+        printHTML += `
           <tr>
             <td>${palletId}</td>
-            ${weights.map(w => <td>${w || ''}</td>).join('')}
+            ${weights.map(w => `<td>${w}</td>`).join('')}
             <td>${total}</td>
           </tr>
-        ;
+        `;
       });
 
-      printHTML += '</tbody></table>';
+      printHTML += `</tbody></table></body></html>`;
 
       const win = window.open('', '', 'width=800,height=600');
-      win.document.write('<html><head><title>הדפסת טבלה</title></head><body>');
-      win.document.write('<h2>רשימת משטחים</h2>');
       win.document.write(printHTML);
-      win.document.write('</body></html>');
       win.document.close();
       win.focus();
       win.print();
@@ -177,7 +174,7 @@
       const rows = document.querySelectorAll('#table tbody tr');
       rows.forEach(row => {
         const palletId = row.cells[0].innerText.trim();
-        const weights = Array.from(row.querySelectorAll('input')).map(i => i.value.trim());
+        const weights = Array.from(row.querySelectorAll('input')).map(i => i.value || '');
         const total = row.cells[5].innerText.trim();
         const line = [palletId, ...weights, total].join(' | ');
         doc.text(line, 10, y);
@@ -188,5 +185,4 @@
     }
   </script>
 </body>
-
 </html>
