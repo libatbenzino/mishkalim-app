@@ -2,171 +2,335 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>רשימת משטחים</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <title>תדריך בטיחות - אוברסיז קומרס</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f0f4f8;
+      color: #333;
+      padding: 20px;
+      direction: rtl;
+    }
+    h2, h3 {
+      color: #1d70b8;
+      margin: 10px 0;
+    }
+    ol {
+      background: #e8f0fe;
+      border: 1px solid #b3d4fc;
+      padding: 10px 20px;
+      border-radius: 10px;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      margin: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn:hover { background: #218838; }
+    .btn.blue { background: #007bff; }
+    .btn.blue:hover { background: #0056b3; }
+    .employee {
+      background: white;
+      padding: 6px 10px;
+      margin: 4px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .employee div {
+      display: flex;
+      gap: 6px;
+    }
+    #newEmployeeInput {
+      margin-top: 5px;
+      padding: 6px;
+      width: 220px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .signature-pad {
+      display: none;
+      margin-top: 10px;
+    }
+    canvas {
+      border: 2px dashed #555;
+      background: #fff;
+      border-radius: 8px;
+      touch-action: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+    }
+    th {
+      background-color: #1d70b8;
+      color: white;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    .actions {
+      margin-top: 25px;
+    }
+    #editInstructionsBox {
+      display: none;
+      margin-top: 10px;
+    }
+    textarea {
+      width: 100%;
+      height: 180px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-family: Arial;
+    }
+    img.signature-img {
+      height: 50px;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 p-6">
-  <div class="max-w-4xl mx-auto space-y-6">
-
-    <h1 class="text-2xl font-bold text-center text-blue-800">רשימת משטחים</h1>
-
-    <!-- טופס הוספת משטח -->
-    <div class="bg-white p-4 rounded shadow">
-      <label class="block mb-2 font-semibold">מספר משטח:</label>
-      <div class="flex gap-2">
-        <input id="pallet-id-input" type="text" placeholder="לדוגמה: OF12345" class="flex-1 border rounded px-2 py-1">
-        <button onclick="addRow()" class="bg-blue-600 text-white px-4 py-1 rounded">הוסף משטח</button>
-      </div>
-    </div>
-
-    <!-- כפתורים -->
-    <div class="flex flex-wrap gap-2">
-      <button onclick="printTable()" class="bg-gray-700 text-white px-4 py-2 rounded">הדפס טבלה</button>
-      <button onclick="exportPDF()" class="bg-green-700 text-white px-4 py-2 rounded">ייצוא ל-PDF</button>
-      <button onclick="clearTable()" class="bg-red-600 text-white px-4 py-2 rounded">נקה הכל</button>
-    </div>
-
-    <!-- טבלה -->
-    <div class="overflow-x-auto bg-white rounded shadow p-4">
-      <table id="table" class="w-full table-auto text-center border">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="p-2 border">מספר משטח</th>
-            <th class="p-2 border">חבית 1 (ק"ג)</th>
-            <th class="p-2 border">חבית 2 (ק"ג)</th>
-            <th class="p-2 border">חבית 3 (ק"ג)</th>
-            <th class="p-2 border">חבית 4 (ק"ג)</th>
-            <th class="p-2 border">סה"כ (ק"ג)</th>
-            <th class="p-2 border">פעולה</th>
-          </tr>
-        </thead>
-        <tbody id="table-body"></tbody>
-      </table>
-      <p class="mt-4 font-bold" id="summary">סיכום: 0 משטחים, 0 ק"ג</p>
-    </div>
-
+<body>
+<div id="pdfContent">
+  <h2>תדריך בטיחות יומי לעובדי אוברסיז קומרס בע"מ</h2>
+  <div id="safetyInstructions"></div>
+  <button class="btn blue" onclick="toggleEditInstructions()">ערוך הוראות בטיחות</button>
+  <div id="editInstructionsBox">
+    <textarea id="instructionsTextarea"></textarea><br>
+    <button class="btn" onclick="saveInstructions()">שמור</button>
+    <button class="btn" onclick="toggleEditInstructions()">ביטול</button>
   </div>
 
-  <script>
-    let rowCount = 0;
+  <h3>רשימת עובדים</h3>
+  <div id="employeeList"></div>
+  <input type="text" id="newEmployeeInput" placeholder="שם עובד חדש">
+  <button class="btn" onclick="addEmployee()">הוסף עובד</button>
 
-    function addRow() {
-      const input = document.getElementById("pallet-id-input");
-      const id = input.value.trim();
-      if (!id) return alert("אנא הזן מספר משטח.");
+  <div id="signaturePad" class="signature-pad">
+    <p>חתום כאן עבור <span id="signingName"></span>:</p>
+    <canvas id="canvas" width="300" height="120"></canvas><br>
+    <button class="btn" onclick="saveSignature()">שמור חתימה</button>
+    <button class="btn blue" onclick="clearCanvas()">נקה</button>
+    <button class="btn" onclick="closePad()">סגור</button>
+  </div>
 
-      const tbody = document.getElementById("table-body");
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td class="border p-2">${id}</td>
-        <td><input type="number" class="w-20 border rounded text-center" onchange="updateRow(this)"></td>
-        <td><input type="number" class="w-20 border rounded text-center" onchange="updateRow(this)"></td>
-        <td><input type="number" class="w-20 border rounded text-center" onchange="updateRow(this)"></td>
-        <td><input type="number" class="w-20 border rounded text-center" onchange="updateRow(this)"></td>
-        <td class="border p-2 font-bold total">0</td>
-        <td><button onclick="removeRow(this)" class="text-red-600">🗑️</button></td>
-      `;
-      tbody.appendChild(row);
-      rowCount++;
-      input.value = "";
-      updateSummary();
+  <h3>רשימת חתימות</h3>
+  <table id="signaturesTable">
+    <thead>
+      <tr>
+        <th>שם עובד</th>
+        <th>תאריך</th>
+        <th>חתימה</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div class="actions">
+  <button class="btn blue" onclick="downloadAsImage()">שמור את הדף כתמונה</button>
+</div>
+
+<script>
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+  let currentEmployee = "";
+
+  window.onload = function () {
+    const employees = JSON.parse(localStorage.getItem("employees") || "[]");
+    if (employees.length === 0) {
+      localStorage.setItem("employees", JSON.stringify(["ימית אבוזגי", "טול יאמנקו", "טל ויטל"]));
     }
+    renderEmployees();
+    renderSignatures();
+    loadInstructions();
+  };
 
-    function updateRow(input) {
-      const row = input.closest("tr");
-      const inputs = row.querySelectorAll("input");
-      let sum = 0;
-      inputs.forEach(i => sum += parseFloat(i.value) || 0);
-      row.querySelector(".total").innerText = sum.toFixed(1);
-      updateSummary();
+  function loadInstructions() {
+    const saved = localStorage.getItem("safetyInstructions");
+    const instructions = saved ? JSON.parse(saved) : defaultInstructions();
+    document.getElementById("safetyInstructions").innerHTML = `<ol>${instructions.map(i => `<li>${i}</li>`).join('')}</ol>`;
+    document.getElementById("instructionsTextarea").value = instructions.join("\n");
+  }
+
+  function defaultInstructions() {
+    return [
+      "יש להשתמש בציוד מיגון והבטיחות הקיימים במחסן.",
+      "אין להפעיל את המלגזה מבלי שעברת הדרכת בטיחות.",
+      "אין להסיע נוסעים במלגזה – מלגזה היא כלי לעובד בלבד.",
+      "חובה לחגור חגורת בטיחות בכל נסיעה.",
+      "אסור להשתמש בטלפון נייד בזמן נהיגה.",
+      "יש לדווח מיידית על תקלות בכלי או במשטח.",
+      "מותר להרים משטחים רק אם הם יציבים וסגורים.",
+      "יש להניח את המשטח בצורה מאוזנת.",
+      "יש להיזהר מהולכי רגל ולתת להם זכות קדימה.",
+      "חובה לשמור מרחק מכל כלי רכב אחר.",
+      "חובה על נעילת בלמים בכל חניית מלגזה.",
+      "אין לעשן או לאכול באזורי העבודה.",
+      "חובה לעטות אפוד זוהר בזמן העבודה.",
+      "כל פעילות מסוכנת תיעשה אך ורק באישור מנהל.",
+      "יש לשמור על סדר וניקיון באזור העבודה."
+    ];
+  }
+
+  function toggleEditInstructions() {
+    const box = document.getElementById("editInstructionsBox");
+    box.style.display = box.style.display === "none" ? "block" : "none";
+  }
+
+  function saveInstructions() {
+    const lines = document.getElementById("instructionsTextarea").value
+      .split("\n")
+      .map(line => line.trim())
+      .filter(line => line !== "");
+    localStorage.setItem("safetyInstructions", JSON.stringify(lines));
+    loadInstructions();
+    toggleEditInstructions();
+  }
+
+  function renderEmployees() {
+    const list = document.getElementById("employeeList");
+    list.innerHTML = "";
+    const employees = JSON.parse(localStorage.getItem("employees") || "[]");
+    employees.forEach((name, index) => {
+      const div = document.createElement("div");
+      div.className = "employee";
+      div.innerHTML = `
+        <span>${name}</span>
+        <div>
+          <button class="btn" onclick="sign('${name}')">חתום</button>
+          <button class="btn blue" onclick="deleteEmployee(${index})">מחק</button>
+        </div>`;
+      list.appendChild(div);
+    });
+  }
+
+  function addEmployee() {
+    const input = document.getElementById("newEmployeeInput");
+    const name = input.value.trim();
+    if (!name) return alert("יש להקליד שם עובד");
+    let employees = JSON.parse(localStorage.getItem("employees") || "[]");
+    employees.push(name);
+    localStorage.setItem("employees", JSON.stringify(employees));
+    input.value = "";
+    renderEmployees();
+  }
+
+  function deleteEmployee(index) {
+    if (!confirm("האם אתה בטוח שברצונך למחוק את העובד?")) return;
+    let employees = JSON.parse(localStorage.getItem("employees") || "[]");
+    employees.splice(index, 1);
+    localStorage.setItem("employees", JSON.stringify(employees));
+    renderEmployees();
+  }
+
+  function sign(name) {
+    currentEmployee = name;
+    document.getElementById("signingName").innerText = name;
+    document.getElementById("signaturePad").style.display = "block";
+    clearCanvas();
+  }
+
+  function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function isCanvasEmpty(canvas) {
+    const blank = document.createElement('canvas');
+    blank.width = canvas.width;
+    blank.height = canvas.height;
+    return canvas.toDataURL() === blank.toDataURL();
+  }
+
+  function saveSignature() {
+    if (isCanvasEmpty(canvas)) {
+      alert("החתימה ריקה – אנא חתום לפני שמירה");
+      return;
     }
+    const dataURL = canvas.toDataURL();
+    const date = new Date().toLocaleDateString('he-IL');
+    let records = JSON.parse(localStorage.getItem("signedRecords") || "[]");
+    records.push({ name: currentEmployee, date: date, signature: dataURL });
+    localStorage.setItem("signedRecords", JSON.stringify(records));
+    document.getElementById("signaturePad").style.display = "none";
+    alert("החתימה נשמרה בהצלחה!");
+    renderSignatures();
+  }
 
-    function removeRow(btn) {
-      btn.closest("tr").remove();
-      rowCount--;
-      updateSummary();
-    }
+  function closePad() {
+    document.getElementById("signaturePad").style.display = "none";
+  }
 
-    function updateSummary() {
-      const totals = document.querySelectorAll(".total");
-      let totalSum = 0;
-      totals.forEach(cell => totalSum += parseFloat(cell.innerText) || 0);
-      document.getElementById("summary").innerText = `סיכום: ${rowCount} משטחים, ${totalSum.toFixed(1)} ק"ג`;
-    }
+  function renderSignatures() {
+    const tbody = document.querySelector("#signaturesTable tbody");
+    tbody.innerHTML = "";
+    const records = JSON.parse(localStorage.getItem("signedRecords") || "[]");
+    records.forEach((rec, index) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${rec.name}</td>
+        <td>${rec.date}</td>
+        <td>
+          <img class="signature-img" src="${rec.signature}" alt="חתימה">
+          <br><button class="btn blue" onclick="deleteSignature(${index})">מחק</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
 
-    function clearTable() {
-      document.getElementById("table-body").innerHTML = "";
-      rowCount = 0;
-      updateSummary();
-    }
+  function deleteSignature(index) {
+    if (!confirm("האם למחוק את החתימה?")) return;
+    let records = JSON.parse(localStorage.getItem("signedRecords") || "[]");
+    records.splice(index, 1);
+    localStorage.setItem("signedRecords", JSON.stringify(records));
+    renderSignatures();
+  }
 
-    function printTable() {
-      const table = document.getElementById("table");
-      const clonedTable = table.cloneNode(true);
+  function downloadAsImage() {
+    const element = document.getElementById("pdfContent");
+    html2canvas(element, { scale: 2 }).then(canvas => {
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "תדריך_חתימות.png";
+        link.click();
+        URL.revokeObjectURL(url);
+      }, "image/png");
+    }).catch(error => {
+      console.error("שגיאה ביצירת תמונה:", error);
+      alert("אירעה שגיאה בשמירת התמונה. נסי שוב.");
+    });
+  }
 
-      // החלפת input בערכים
-      const inputs = clonedTable.querySelectorAll("input");
-      inputs.forEach(input => {
-        const td = input.parentElement;
-        const text = document.createTextNode(input.value || '');
-        td.innerHTML = '';
-        td.appendChild(text);
-      });
+  // ציור חתימה
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    let x = e.clientX || e.touches?.[0].clientX;
+    let y = e.clientY || e.touches?.[0].clientY;
+    return { x: x - rect.left, y: y - rect.top };
+  }
 
-      const printWindow = window.open('', '', 'width=900,height=600');
-      printWindow.document.write(`
-        <html dir="rtl" lang="he">
-          <head>
-            <title>הדפסת טבלה</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; direction: rtl; text-align: center; }
-              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              th, td { border: 1px solid #444; padding: 8px; }
-              th { background-color: #f0f0f0; }
-            </style>
-          </head>
-          <body>
-            <h2>רשימת משטחים</h2>
-            ${clonedTable.outerHTML}
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-    }
-
-    function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: "landscape" });
-
-      doc.setFont("helvetica");
-      doc.setFontSize(14);
-      doc.text("רשימת משטחים", 140, 15, { align: "center" });
-
-      const data = [];
-      const rows = document.querySelectorAll("#table tbody tr");
-
-      rows.forEach(row => {
-        const id = row.cells[0].innerText;
-        const weights = Array.from(row.querySelectorAll("input")).map(i => i.value || "");
-        const total = row.querySelector(".total").innerText;
-        data.push([id, ...weights, total]);
-      });
-
-      doc.autoTable({
-        head: [['מספר משטח', 'חבית 1', 'חבית 2', 'חבית 3', 'חבית 4', 'סה"כ']],
-        body: data,
-        styles: { halign: 'center' },
-        theme: 'grid',
-        margin: { top: 25 }
-      });
-
-      doc.save("רשימת_משטחים.pdf");
-    }
-  </script>
+  canvas.addEventListener("mousedown", e => { drawing = true; ctx.beginPath(); ctx.moveTo(...Object.values(getPos(e))); });
+  canvas.addEventListener("mouseup", () => drawing = false);
+  canvas.addEventListener("mousemove", e => { if (drawing) ctx.lineTo(...Object.values(getPos(e))), ctx.stroke(); });
+  canvas.addEventListener("touchstart", e => { drawing = true; ctx.beginPath(); ctx.moveTo(...Object.values(getPos(e))); });
+  canvas.addEventListener("touchend", () => drawing = false);
+  canvas.addEventListener("touchmove", e => { if (drawing) ctx.lineTo(...Object.values(getPos(e))), ctx.stroke(); });
+</script>
 </body>
 </html>
+
