@@ -128,7 +128,7 @@
 </head>
 <body>
   <div class="container" id="pdfContent">
-    <h2>תדריך בטיחות לעובדי אוברסיז קומרס בע"מ</h2>
+    <h2>תדריך בטיחות יומי לעובדי אוברסיז קומרס בע"מ</h2>
 
     <div id="safetyInstructions"></div>
 
@@ -156,7 +156,15 @@
     </table>
 
     <div class="actions">
-      <button class="btn blue" onclick="downloadAsImage()">שמור את הדף כתמונה</button>
+      <button class="btn blue" onclick="toggleEditInstructions()">ערוך הוראות בטיחות</button>
+      <button class="btn blue" onclick="downloadReport()">שמור את ההוראות + חתימות כתמונה</button>
+    </div>
+
+    <div id="editBox" style="display: none; margin-top: 20px;">
+      <textarea id="instructionEditor" rows="10" style="width: 100%;"></textarea>
+      <br />
+      <button class="btn" onclick="saveInstructions()">שמור</button>
+      <button class="btn blue" onclick="cancelEdit()">ביטול</button>
     </div>
   </div>
 
@@ -200,8 +208,31 @@
     }
 
     function loadInstructions() {
-      const instructions = defaultInstructions();
-      document.getElementById("safetyInstructions").innerHTML = `<ol>${instructions.map(i => `<li>${i}</li>`).join('')}</ol>`;
+      const saved = JSON.parse(localStorage.getItem("safetyInstructions"));
+      const instructions = saved || defaultInstructions();
+      document.getElementById("safetyInstructions").innerHTML =
+        `<ol>${instructions.map(i => `<li>${i}</li>`).join('')}</ol>`;
+    }
+
+    function toggleEditInstructions() {
+      const saved = JSON.parse(localStorage.getItem("safetyInstructions"));
+      const instructions = saved || defaultInstructions();
+      document.getElementById("instructionEditor").value = instructions.join("\n");
+      document.getElementById("editBox").style.display = "block";
+    }
+
+    function saveInstructions() {
+      const lines = document.getElementById("instructionEditor").value
+        .split("\n")
+        .map(i => i.trim())
+        .filter(i => i);
+      localStorage.setItem("safetyInstructions", JSON.stringify(lines));
+      document.getElementById("editBox").style.display = "none";
+      loadInstructions();
+    }
+
+    function cancelEdit() {
+      document.getElementById("editBox").style.display = "none";
     }
 
     function renderEmployees() {
@@ -220,6 +251,12 @@
     }
 
     function sign(name) {
+      const records = JSON.parse(localStorage.getItem("signedRecords") || "[]");
+      const alreadySigned = records.some(r => r.name === name);
+      if (alreadySigned) {
+        alert("עובד זה כבר חתם היום.");
+        return;
+      }
       currentEmployee = name;
       document.getElementById("signingName").innerText = name;
       document.getElementById("signaturePad").style.display = "block";
@@ -281,20 +318,26 @@
       renderSignatures();
     }
 
-    function downloadAsImage() {
-      const element = document.getElementById("pdfContent");
-      html2canvas(element, { scale: 2 }).then(canvas => {
+    function downloadReport() {
+      const instructions = document.getElementById("safetyInstructions").cloneNode(true);
+      const signatures = document.getElementById("signaturesTable").cloneNode(true);
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "20px";
+      wrapper.style.background = "#fff";
+      wrapper.appendChild(instructions);
+      wrapper.appendChild(document.createElement("br"));
+      wrapper.appendChild(signatures);
+      document.body.appendChild(wrapper);
+      html2canvas(wrapper, { scale: 2 }).then(canvas => {
         canvas.toBlob(blob => {
           const url = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;
-          link.download = "תדריך_חתימות.png";
+          link.download = "דוח_חתימות.png";
           link.click();
           URL.revokeObjectURL(url);
+          document.body.removeChild(wrapper);
         }, "image/png");
-      }).catch(error => {
-        console.error("שגיאה בשמירה כתמונה:", error);
-        alert("אירעה שגיאה בשמירת התמונה. נסי שוב.");
       });
     }
 
