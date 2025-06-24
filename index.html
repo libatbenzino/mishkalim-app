@@ -55,6 +55,10 @@
       background: #007bff;
     }
 
+    .btn.red {
+      background: #dc3545;
+    }
+
     .btn:hover {
       opacity: 0.9;
     }
@@ -128,7 +132,7 @@
 </head>
 <body>
   <div class="container" id="pdfContent">
-    <h2>תדריך בטיחות יומי לעובדי אוברסיז קומרס בע"מ</h2>
+    <h2>תדריך בטיחות לעובדי אוברסיז קומרס בע"מ</h2>
 
     <div id="safetyInstructions"></div>
 
@@ -158,6 +162,7 @@
     <div class="actions">
       <button class="btn blue" onclick="toggleEditInstructions()">ערוך הוראות בטיחות</button>
       <button class="btn blue" onclick="downloadReport()">שמור את ההוראות + חתימות כתמונה</button>
+      <button class="btn red" onclick="clearAllSignatures()">נקה את כל החתימות</button>
     </div>
 
     <div id="editBox" style="display: none; margin-top: 20px;">
@@ -318,16 +323,36 @@
       renderSignatures();
     }
 
+    function clearAllSignatures() {
+      if (confirm("האם למחוק את כל החתימות?")) {
+        localStorage.removeItem("signedRecords");
+        renderSignatures();
+        alert("כל החתימות נמחקו.");
+      }
+    }
+
     function downloadReport() {
+      const title = document.createElement("h2");
+      title.innerText = "תדריך בטיחות יומי לעובדי אוברסיז קומרס בע\"מ";
+      title.style.color = "#1d70b8";
+      title.style.fontSize = "24px";
+      title.style.textAlign = "center";
+
       const instructions = document.getElementById("safetyInstructions").cloneNode(true);
       const signatures = document.getElementById("signaturesTable").cloneNode(true);
+
       const wrapper = document.createElement("div");
       wrapper.style.padding = "20px";
       wrapper.style.background = "#fff";
+      wrapper.style.direction = "rtl";
+      wrapper.appendChild(title);
+      wrapper.appendChild(document.createElement("br"));
       wrapper.appendChild(instructions);
       wrapper.appendChild(document.createElement("br"));
       wrapper.appendChild(signatures);
+
       document.body.appendChild(wrapper);
+
       html2canvas(wrapper, { scale: 2 }).then(canvas => {
         canvas.toBlob(blob => {
           const url = URL.createObjectURL(blob);
@@ -341,7 +366,6 @@
       });
     }
 
-    // ציור חתימה
     function getPos(e) {
       const rect = canvas.getBoundingClientRect();
       let x = e.clientX || e.touches?.[0].clientX;
